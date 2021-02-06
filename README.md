@@ -1,5 +1,5 @@
 # Trippy animations
-## Try it here! www.lorenzoros.si/trippy-animations
+# [Try it!](www.lorenzoros.si/trippy-animations)
 
 ## Background
 I challenged myself. Could I make something good looking in less than 24 hours? You judge.
