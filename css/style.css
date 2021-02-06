@@ -18,23 +18,30 @@ body {
   height: 100vh;
   width: 100vw;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
 }
 
-.credits {
-  font-size: 2rem;
+.instructions, .credits {
   width: calc(100vw - 2rem);
-  position: absolute;
-  bottom: 1rem;
-  left: 1rem;
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
-  color: rgb(200, 200, 200);
+  user-select: none;
 }
 
-.info {
+.instructions {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  justify-content: center;
   color: rgb(127, 127, 127);
+}
+
+.credits {
+  position: absolute;
+  font-size: 2rem;
+  bottom: 1rem;
+  left: 1rem;
+  justify-content: space-between;
+  color: rgb(200, 200, 200);
 }

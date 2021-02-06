@@ -292,6 +292,7 @@ function astroid(r) {
 function mouseClicked() {
   if (record) return;
 
+  setInterval(() => $(".instructions").animate({"opacity": 0}, "slow"), 1000);
   let new_mode;
   do {
     new_mode = parseInt(random(1, colors.length));
