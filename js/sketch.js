@@ -3,12 +3,13 @@
 let side, scl;
 let items, border;
 let dy, theta;
-let max_dx, max_dy, max_theta;
+let max_dx, max_dy, max_theta, theta_direction, y_direction, x_direction;
 let duration, fps, frame_offset, phase, mode;
-let colors;
+let colors, palette;
 
 let debug = false;
 let record = false;
+let recording_started = false;
 let capturer;
 
 function setup() {
@@ -17,17 +18,11 @@ function setup() {
   let w, h;
 
   if (record) {
-    w = 900;
-    h = 900;
+    w = 1000;
+    h = 1000;
     mode = 0;
   } else {
-    lower = min($(window).width(), $(window).height());
-    size = 2000;
-
-    for (; size > lower; size -= 300) {}
-    w = size;
-    h = size;
-
+    w = h = min($(window).width(), $(window).height()) - 300;
     mode = parseInt(random(1, 8));
   }
 
@@ -36,7 +31,7 @@ function setup() {
   createCanvas(w, h);
 
   items = 12;
-  border = 2;
+  border = 3;
   scl = max(width, height) / items;
   side = scl / sqrt(2);
   fps = 60;
@@ -47,8 +42,9 @@ function setup() {
             [color("#1a535c"), color("#ff6b6b")], [color("#ffd500"), color("#00509d")]
           ];
 
-  phase = 0;
   frame_offset = 1;
+
+  reset_variables();
 
   if (debug) {
     frameRate(1);
@@ -79,63 +75,69 @@ function draw() {
     phase = frameCount % 2 == 0 ? 0 : 1;
   }
 
-  if (percent > 1) {
+  if (percent >= 1) {
     frame_offset = frameCount;
     percent = 0;
     phase = phase == 0 ? 1 : 0;
   }
 
   if (percent == 0 && record && phase == 0) {
-    capturer = new CCapture({
-      format: 'png',
-      framerate: fps,
-      motionBlurFrames: 1,
-      name: `animation_${mode}`
-    });
+    if (!recording_started) {
+      capturer = new CCapture({
+        format: 'png',
+        framerate: fps,
+        motionBlurFrames: 1,
+        name: `animation_${mode}`
+      });
 
-    console.log(`Started recording ${mode + 1}/${colors.length}`);
-    capturer.start();
-  } else if (percent == 1 && record && phase == 1) {
-    capturer.stop();
-    capturer.save();
-    console.log(`Completed recording ${mode + 1}/${colors.length}`);
+      console.log(`Started recording ${mode + 1}/${colors.length}`);
+      capturer.start();
+      recording_started = true;
+    } else {
+      capturer.stop();
+      capturer.save();
+      recording_started = false;
+      console.log(`Completed recording ${mode + 1}/${colors.length}`);
 
-    mode = mode + 1;
-    if (mode > colors.length) {
-      mode = 0;
-      record = false;
-      console.log("All completed");
+      mode = mode + 1;
+      if (mode == colors.length) {
+        reset_variables();
+        record = false;
+        console.log("All completed");
+      } else {
+        reset_variables(mode);
+      }
     }
   }
 
-  dy = easeInOutSine(percent) * max_dy;
+  dy = easeInOutSine(percent) * max_dy * y_direction;
 
   if (phase == 0) {
     if (percent < 0.5) {
-      dx = easeInOutQuad(percent * 2) * max_dx;
+      dx = x_direction * easeInOutQuad(percent * 2) * max_dx;
     } else {
-      dx = - easeInOutQuad((percent - 0.5) * 2) * max_dx + max_dx;
+      dx = - x_direction * easeInOutQuad((percent - 0.5) * 2) * max_dx + max_dx;
     }
   } else if (phase == 1) {
     if (percent < 0.5) {
-      dx = - easeInOutQuad(percent * 2) * max_dx;
+      dx = - x_direction * easeInOutQuad(percent * 2) * max_dx;
     } else {
-      dx = easeInOutQuad((percent - 0.5) * 2) * max_dx - max_dx;
+      dx = x_direction * easeInOutQuad((percent - 0.5) * 2) * max_dx - max_dx;
     }
   }
 
 
-  theta = easeInOutSine(percent) * max_theta;
+  theta = easeInOutSine(percent) * max_theta * theta_direction;
 
   push();
-  background(colors[mode][1-phase]);
+  background(palette[1-phase]);
   rectMode(CENTER);
 
     for (let x = -border; x < items + border; x++) {
       for (let y = -border; y < items + border; y++) {
         push();
 
-        let fill_c = colors[mode][phase];
+        let fill_c = palette[phase];
         fill(fill_c);
 
         if (mode == 0) {
@@ -211,8 +213,6 @@ function draw() {
             rect(scl / 2, 0, scl / 4 + 1, scl / 4);
             rect(0, -scl / 2, scl / 4, scl / 4 + 1);
           }
-        } else if (mode == 8) {
-
         }
         pop();
       }
@@ -222,6 +222,20 @@ function draw() {
   // record frame
   if (record) {
     capturer.capture(document.getElementById('defaultCanvas0'));
+  }
+}
+
+function reset_variables(new_mode) {
+  theta_direction = random(1) > 0.5 ? -1 : 1;
+  y_direction = random(1) > 0.5 ? -1 : 1;
+  x_direction = random(1) > 0.5 ? -1 : 1;
+  mode = new_mode || 0;
+  phase = 0;
+
+  if (record) {
+    palette = colors[mode];
+  } else {
+    palette = colors[parseInt(random(0, colors.length))];
   }
 }
 
@@ -263,7 +277,7 @@ function star(r1, r2) {
 function astroid(r) {
   // this took me a loooooooong while to figure it out
   beginShape();
-  let points = 20;
+  let points = 10;
   for (let i = 0; i < 4; i++) {
     for (let j = 0; j < points; j++) {
       let theta = ((4 - i) % 4) * HALF_PI + HALF_PI / points * j;
@@ -282,5 +296,5 @@ function mouseClicked() {
   do {
     new_mode = parseInt(random(1, colors.length));
   } while (new_mode === mode);
-  mode = new_mode;
+  reset_variables(new_mode);
 }
