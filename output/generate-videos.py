@@ -1,5 +1,7 @@
+# this is the script that i used to create output videos and gifs
+# simply put all the animations, one per each folder
+
 import os
-import shutil
 import subprocess
 import logging
 
